@@ -26,16 +26,17 @@ export default function Phone3D() {
     const width = mountRef.current.clientWidth
     const height = mountRef.current.clientHeight
 
-    // Camera with better position for dragging
+    // Keeping camera at z=5 as requested
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000)
-    camera.position.set(0, -3, 5) // Position directly in front
+    camera.position.set(0, 0, 5) // Keeping at z=5 as requested
+    camera.lookAt(0, 0, 0) 
     sceneRef.current.camera = camera
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true, 
       alpha: true,
-      preserveDrawingBuffer: true // Better for screenshots
+      preserveDrawingBuffer: true
     })
     renderer.setSize(width, height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -44,11 +45,12 @@ export default function Phone3D() {
 
     // Orbit Controls for dragging
     const controls = new OrbitControls(camera, renderer.domElement)
-    controls.enableDamping = true // Add inertia for smoother dragging
+    controls.enableDamping = true
     controls.dampingFactor = 0.05
-    controls.rotateSpeed = 1 // Adjust rotation speed
-    controls.enableZoom = false // Disable zoom
-    controls.enablePan = false // Disable panning
+    controls.rotateSpeed = 1
+    controls.enableZoom = false
+    controls.enablePan = false
+    controls.target.set(0, 0, 0) // Ensure rotating around center point
     sceneRef.current.controls = controls
 
     // Lights for better visibility
@@ -71,7 +73,7 @@ export default function Phone3D() {
     
     // Top light
     const topLight = new THREE.DirectionalLight(0xffffff, 0.7)
-    topLight.position.set(0, 0, 5)
+    topLight.position.set(0, 5, 5)
     scene.add(topLight)
     
     // Bottom light
@@ -82,45 +84,52 @@ export default function Phone3D() {
     // Load Model
     const loader = new GLTFLoader()
     loader.load(
-      '/iphone.glb',
+      '/mockup-celphone2.glb',
       (gltf) => {
         const phone = gltf.scene
         sceneRef.current.phone = phone
 
-        // Center the model
+        // Center the model precisely
         const box = new THREE.Box3().setFromObject(phone)
         const center = box.getCenter(new THREE.Vector3())
         phone.position.sub(center)
         
-        // Scale appropriately
+        // Get model size for appropriate scaling
         const size = box.getSize(new THREE.Vector3())
-        const scale = 3 / Math.max(size.x, size.y, size.z)
+        
+        // Increased scale to make phone bigger (adjusted from 4 to 6)
+        // This makes the phone approximately 50% larger
+        const scale = 4 / Math.max(size.x, size.y, size.z)
         phone.scale.setScalar(scale)
-
+        
+        // Fine-tune position if needed for perfect centering
+        phone.position.y = -2.5
+        phone.rotation.y = Math.PI / 2 // Rotate model 90 degrees on y-axis
         scene.add(phone)
         
-        // Auto-rotate slightly at the beginning to show it's interactive
+        // Auto-rotate as in original code
         if (controls) {
           controls.autoRotate = true
           controls.autoRotateSpeed = 2
         }
       },
       undefined,
+      (error) => console.error('Error loading model:', error)
     )
 
-    // Animation loop - just for controls update and rendering
+    // Animation loop
     const animate = () => {
       requestAnimationFrame(animate)
       
       if (sceneRef.current.controls) {
-        sceneRef.current.controls.update() // Required for damping to work
+        sceneRef.current.controls.update()
       }
       
       renderer.render(scene, camera)
     }
     animate()
 
-    // Resize handler
+    // Resize handler with improved responsiveness
     const resize = () => {
       if (!sceneRef.current.camera || !sceneRef.current.renderer || !mountRef.current) return
       const w = mountRef.current.clientWidth
@@ -130,6 +139,9 @@ export default function Phone3D() {
       sceneRef.current.renderer.setSize(w, h)
     }
     window.addEventListener('resize', resize)
+    
+    // Initial resize to ensure proper dimensions
+    resize()
 
     return () => {
       window.removeEventListener('resize', resize)
@@ -144,11 +156,11 @@ export default function Phone3D() {
   }, [])
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <div className="w-full h-full relative">
       <div 
         ref={mountRef} 
-        className="absolute inset-0 z-0 flex items-center justify-center"
-        style={{ maxWidth: '100%', maxHeight: '100%', cursor: 'grab' }}
+        className="w-full h-full absolute inset-0 flex items-center justify-center"
+        style={{ cursor: 'grab' }}
       />
     </div>
   )
