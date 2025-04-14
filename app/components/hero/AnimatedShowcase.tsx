@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import gsap from 'gsap'
 
 export default function Phone3D() {
   const mountRef = useRef<HTMLDivElement>(null)
@@ -13,12 +14,12 @@ export default function Phone3D() {
     renderer?: THREE.WebGLRenderer,
     controls?: OrbitControls,
     phone?: THREE.Group,
+    idleTimeline?: gsap.core.Timeline,
   }>({})
 
   useEffect(() => {
     if (!mountRef.current) return;
 
-    // Scene
     const scene = new THREE.Scene()
     scene.background = null
     sceneRef.current.scene = scene
@@ -26,15 +27,13 @@ export default function Phone3D() {
     const width = mountRef.current.clientWidth
     const height = mountRef.current.clientHeight
 
-    // Keeping camera at z=5 as requested
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000)
-    camera.position.set(0, 0, 5) // Keeping at z=5 as requested
-    camera.lookAt(0, 0, 0) 
+    camera.position.set(0, 0, 5)
+    camera.lookAt(0, 0, 0)
     sceneRef.current.camera = camera
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: true, 
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
       alpha: true,
       preserveDrawingBuffer: true
     })
@@ -43,112 +42,172 @@ export default function Phone3D() {
     mountRef.current.appendChild(renderer.domElement)
     sceneRef.current.renderer = renderer
 
-    // Orbit Controls for dragging
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
     controls.dampingFactor = 0.05
-    controls.rotateSpeed = 1
+    controls.rotateSpeed = 0.6
     controls.enableZoom = false
     controls.enablePan = false
-    controls.target.set(0, 0, 0) // Ensure rotating around center point
+
+    // Add these lines to restrict rotation to horizontal only
+    controls.minPolarAngle = Math.PI / 2; // 90 degrees
+    controls.maxPolarAngle = Math.PI / 2; // 90 degrees
+
+    // Optional: If you want to limit horizontal rotation range as well
+    controls.minAzimuthAngle = -Math.PI / 4; // -45 degrees
+    controls.maxAzimuthAngle = Math.PI / 4;  // 45 degrees
+
     sceneRef.current.controls = controls
 
-    // Lights for better visibility
-    const ambient = new THREE.AmbientLight(0xf3f3f3, 0.8)
-    scene.add(ambient)
-    
-    // Front light to illuminate the screen
-    const frontLight = new THREE.DirectionalLight(0xffffff, 1.0)
-    frontLight.position.set(0, 0, 10)
-    scene.add(frontLight)
-    
-    // Side lights for better edge definition
-    const rightLight = new THREE.DirectionalLight(0xffffff, 0.6)
-    rightLight.position.set(10, 0, 0)
-    scene.add(rightLight)
-    
-    const leftLight = new THREE.DirectionalLight(0xffffff, 0.6)
-    leftLight.position.set(-10, 0, 0)
-    scene.add(leftLight)
-    
-    // Top light
-    const topLight = new THREE.DirectionalLight(0xffffff, 0.7)
-    topLight.position.set(0, 5, 5)
-    scene.add(topLight)
-    
-    // Bottom light
-    const bottomLight = new THREE.DirectionalLight(0xffffff, 0.5)
-    bottomLight.position.set(0, -10, 3)
-    scene.add(bottomLight)
+    const addLights = () => {
+      const ambient = new THREE.AmbientLight(0xf3f3f3, 0.8)
+      const front = new THREE.DirectionalLight(0xffffff, 1.0)
+      const right = new THREE.DirectionalLight(0xffffff, 0.6)
+      const left = new THREE.DirectionalLight(0xffffff, 0.6)
+      const top = new THREE.DirectionalLight(0xffffff, 0.7)
+      const bottom = new THREE.DirectionalLight(0xffffff, 0.5)
 
-    // Load Model
+      front.position.set(0, 0, 10)
+      right.position.set(10, 0, 0)
+      left.position.set(-10, 0, 0)
+      top.position.set(0, 5, 5)
+      bottom.position.set(0, -10, 3)
+
+      scene.add(ambient, front, right, left, top, bottom)
+    }
+
+    addLights()
+
     const loader = new GLTFLoader()
+    const originalState = {
+      rotationX: 0,
+      rotationY: Math.PI,
+      rotationZ: 0,
+      positionY: -3.4,
+      positionX: 0,
+    }
+
+    let resetTimeout: NodeJS.Timeout | null = null
+
     loader.load(
       '/mockup-celphone2.glb',
       (gltf) => {
         const phone = gltf.scene
         sceneRef.current.phone = phone
 
-        // Center the model precisely
         const box = new THREE.Box3().setFromObject(phone)
         const center = box.getCenter(new THREE.Vector3())
         phone.position.sub(center)
-        
-        // Get model size for appropriate scaling
+
         const size = box.getSize(new THREE.Vector3())
-        
-        // Increased scale to make phone bigger (adjusted from 4 to 6)
-        // This makes the phone approximately 50% larger
-        const scale = 4 / Math.max(size.x, size.y, size.z)
+        const scale = 5 / Math.max(size.x, size.y, size.z)
         phone.scale.setScalar(scale)
-        
-        // Fine-tune position if needed for perfect centering
-        phone.position.y = -2.5
-        phone.rotation.y = Math.PI / 2 // Rotate model 90 degrees on y-axis
+
+        phone.position.y = originalState.positionY
+        phone.position.x = originalState.positionX
+        phone.rotation.y = originalState.rotationY
         scene.add(phone)
-        
-        // Auto-rotate as in original code
-        if (controls) {
-          controls.autoRotate = true
-          controls.autoRotateSpeed = 2
-        }
+
+        startIdleAnimation(phone)
+
+        animate()
       },
       undefined,
       (error) => console.error('Error loading model:', error)
     )
 
-    // Animation loop
+    const startIdleAnimation = (phone: THREE.Group) => {
+      if (sceneRef.current.idleTimeline) {
+        sceneRef.current.idleTimeline.kill()
+      }
+
+      const tl = gsap.timeline({
+        repeat: -1,
+        yoyo: true,
+        defaults: { duration: 3.2, ease: 'power1.inOut' }
+      })
+
+      tl.to(phone.rotation, {
+        y: originalState.rotationY + THREE.MathUtils.degToRad(10),
+        x: THREE.MathUtils.degToRad(-3)
+      }).to(phone.rotation, {
+        y: originalState.rotationY - THREE.MathUtils.degToRad(10),
+        x: THREE.MathUtils.degToRad(3)
+      })
+
+      sceneRef.current.idleTimeline = tl
+    }
+
     const animate = () => {
       requestAnimationFrame(animate)
-      
-      if (sceneRef.current.controls) {
-        sceneRef.current.controls.update()
-      }
-      
+      sceneRef.current.controls?.update()
       renderer.render(scene, camera)
     }
-    animate()
 
-    // Resize handler with improved responsiveness
-    const resize = () => {
-      if (!sceneRef.current.camera || !sceneRef.current.renderer || !mountRef.current) return
-      const w = mountRef.current.clientWidth
-      const h = mountRef.current.clientHeight
-      sceneRef.current.camera.aspect = w / h
-      sceneRef.current.camera.updateProjectionMatrix()
-      sceneRef.current.renderer.setSize(w, h)
+    const onStartInteraction = () => {
+      if (resetTimeout) clearTimeout(resetTimeout)
+      sceneRef.current.idleTimeline?.pause()
     }
+
+    const onEndInteraction = () => {
+      if (resetTimeout) clearTimeout(resetTimeout)
+
+      resetTimeout = setTimeout(() => {
+        const phone = sceneRef.current.phone
+        if (!phone) return
+
+        gsap.timeline()
+          .to(phone.position, {
+            x: originalState.positionX,
+            y: originalState.positionY,
+            duration: 0.6,
+            ease: 'power2.out'
+          })
+          .to(phone.rotation, {
+            x: originalState.rotationX,
+            y: originalState.rotationY,
+            z: originalState.rotationZ,
+            duration: 0.8,
+            ease: 'power2.out',
+            onComplete: () => {
+              phone.position.set(originalState.positionX, originalState.positionY, phone.position.z)
+              phone.rotation.set(originalState.rotationX, originalState.rotationY, originalState.rotationZ)
+              startIdleAnimation(phone)
+            }
+          }, '-=0.5')
+      }, 2000)
+    }
+
+    controls.addEventListener('start', onStartInteraction)
+    controls.addEventListener('end', onEndInteraction)
+
+    const resize = () => {
+      const w = mountRef.current?.clientWidth || window.innerWidth
+      const h = mountRef.current?.clientHeight || window.innerHeight
+      camera.aspect = w / h
+      camera.updateProjectionMatrix()
+      renderer.setSize(w, h)
+    }
+
     window.addEventListener('resize', resize)
-    
-    // Initial resize to ensure proper dimensions
     resize()
 
     return () => {
       window.removeEventListener('resize', resize)
-      if (sceneRef.current.controls) {
-        sceneRef.current.controls.dispose()
+      controls.removeEventListener('start', onStartInteraction)
+      controls.removeEventListener('end', onEndInteraction)
+
+      if (sceneRef.current.phone) {
+        gsap.killTweensOf(sceneRef.current.phone.rotation)
+        gsap.killTweensOf(sceneRef.current.phone.position)
       }
-      if (renderer) renderer.dispose()
+
+      if (sceneRef.current.idleTimeline) {
+        sceneRef.current.idleTimeline.kill()
+      }
+
+      sceneRef.current.controls?.dispose()
+      renderer.dispose()
       if (mountRef.current && renderer.domElement) {
         mountRef.current.removeChild(renderer.domElement)
       }
@@ -157,8 +216,8 @@ export default function Phone3D() {
 
   return (
     <div className="w-full h-full relative">
-      <div 
-        ref={mountRef} 
+      <div
+        ref={mountRef}
         className="w-full h-full absolute inset-0 flex items-center justify-center"
         style={{ cursor: 'grab' }}
       />
