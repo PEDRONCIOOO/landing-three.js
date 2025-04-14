@@ -18,7 +18,7 @@ export default function Header() {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY;
       const scrollingUp = prevScrollPos > currentScrollPos;
-      const beyondThreshold = currentScrollPos > window.innerHeight * 0.8; // 80vh threshold
+      const beyondThreshold = currentScrollPos > window.innerHeight * 0.6; // 80vh threshold
 
       setVisible(scrollingUp || !beyondThreshold);
       setPrevScrollPos(currentScrollPos);
@@ -105,12 +105,12 @@ export default function Header() {
 
           <div className="flex items-center gap-2 text-sm">
             <motion.div variants={itemVariants}>
-              <Link href="/login" className="bg-black text-white px-4 py-1 rounded">
+              <Link href="/login" className="bg-black text-white px-4 py-1 rounded-lg">
                 Entrar
               </Link>
             </motion.div>
             <motion.div variants={itemVariants}>
-              <Link href="/register" className="bg-gray-200 text-black px-4 py-1 rounded">
+              <Link href="/register" className="bg-gray-200 text-black px-4 py-1 rounded-lg">
                 Registrar
               </Link>
             </motion.div>
