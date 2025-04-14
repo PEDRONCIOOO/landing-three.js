@@ -1,13 +1,19 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import gsap from 'gsap'
+import { motion } from 'framer-motion'
 
-export default function Phone3D() {
+interface Phone3DProps {
+  onLoad?: () => void;
+}
+
+export default function Phone3D({ onLoad }: Phone3DProps) {
   const mountRef = useRef<HTMLDivElement>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const sceneRef = useRef<{
     scene?: THREE.Scene,
     camera?: THREE.PerspectiveCamera,
@@ -18,14 +24,15 @@ export default function Phone3D() {
   }>({})
 
   useEffect(() => {
-    if (!mountRef.current) return;
+    const mountElement = mountRef.current;
+    if (!mountElement) return;
 
     const scene = new THREE.Scene()
     scene.background = null
     sceneRef.current.scene = scene
 
-    const width = mountRef.current.clientWidth
-    const height = mountRef.current.clientHeight
+    const width = mountElement.clientWidth
+    const height = mountElement.clientHeight
 
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000)
     camera.position.set(0, 0, 5)
@@ -39,7 +46,7 @@ export default function Phone3D() {
     })
     renderer.setSize(width, height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    mountRef.current.appendChild(renderer.domElement)
+    mountElement.appendChild(renderer.domElement)
     sceneRef.current.renderer = renderer
 
     const controls = new OrbitControls(camera, renderer.domElement)
@@ -60,7 +67,7 @@ export default function Phone3D() {
     sceneRef.current.controls = controls
 
     const addLights = () => {
-      const ambient = new THREE.AmbientLight(0xf3f3f3, 0.8)
+      const ambient = new THREE.AmbientLight(0xfbfbfb, 0.8)
       const front = new THREE.DirectionalLight(0xffffff, 1.0)
       const right = new THREE.DirectionalLight(0xffffff, 0.6)
       const left = new THREE.DirectionalLight(0xffffff, 0.6)
@@ -83,7 +90,7 @@ export default function Phone3D() {
       rotationX: 0,
       rotationY: Math.PI,
       rotationZ: 0,
-      positionY: -3.4,
+      positionY: -3.5,
       positionX: 0,
     }
 
@@ -107,6 +114,10 @@ export default function Phone3D() {
         phone.position.x = originalState.positionX
         phone.rotation.y = originalState.rotationY
         scene.add(phone)
+
+        // Set loading to false and call the onLoad callback
+        setIsLoading(false)
+        if (onLoad) onLoad()
 
         startIdleAnimation(phone)
 
@@ -138,8 +149,11 @@ export default function Phone3D() {
       sceneRef.current.idleTimeline = tl
     }
 
+    // Also capture animationFrameId for proper cleanup
+    let animationFrameId: number;
+
     const animate = () => {
-      requestAnimationFrame(animate)
+      animationFrameId = requestAnimationFrame(animate)
       sceneRef.current.controls?.update()
       renderer.render(scene, camera)
     }
@@ -175,15 +189,15 @@ export default function Phone3D() {
               startIdleAnimation(phone)
             }
           }, '-=0.5')
-      }, 2000)
+      }, 500)
     }
 
     controls.addEventListener('start', onStartInteraction)
     controls.addEventListener('end', onEndInteraction)
 
     const resize = () => {
-      const w = mountRef.current?.clientWidth || window.innerWidth
-      const h = mountRef.current?.clientHeight || window.innerHeight
+      const w = mountElement?.clientWidth || window.innerWidth
+      const h = mountElement?.clientHeight || window.innerHeight
       camera.aspect = w / h
       camera.updateProjectionMatrix()
       renderer.setSize(w, h)
@@ -196,30 +210,72 @@ export default function Phone3D() {
       window.removeEventListener('resize', resize)
       controls.removeEventListener('start', onStartInteraction)
       controls.removeEventListener('end', onEndInteraction)
+      
+      // Cancel the animation frame
+      cancelAnimationFrame(animationFrameId)
 
-      if (sceneRef.current.phone) {
-        gsap.killTweensOf(sceneRef.current.phone.rotation)
-        gsap.killTweensOf(sceneRef.current.phone.position)
+      // Store a reference to the phone and timeline for cleanup
+      const phone = sceneRef.current.phone
+      const idleTimeline = sceneRef.current.idleTimeline
+
+      if (phone) {
+        gsap.killTweensOf(phone.rotation)
+        gsap.killTweensOf(phone.position)
       }
 
-      if (sceneRef.current.idleTimeline) {
-        sceneRef.current.idleTimeline.kill()
+      if (idleTimeline) {
+        idleTimeline.kill()
       }
 
-      sceneRef.current.controls?.dispose()
+      controls.dispose()
       renderer.dispose()
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement)
+      
+      if (mountElement && renderer.domElement) {
+        mountElement.removeChild(renderer.domElement)
       }
+
+      // Clear the scene ref to prevent memory leaks
+      sceneRef.current = {}
     }
-  }, [])
+  }, [onLoad])
 
   return (
     <div className="w-full h-full relative">
+      {isLoading && (
+        <motion.div 
+          className="absolute inset-0 flex items-center justify-center z-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="w-16 h-16 relative"
+          >
+            <motion.div 
+              className="absolute inset-0 rounded-full border-2 border-cyan-500 border-t-transparent"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+            />
+            <motion.div 
+              className="absolute inset-3 rounded-full border-2 border-cyan-500 border-t-transparent"
+              animate={{ rotate: -360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            />
+            <motion.div 
+              className="absolute inset-6 rounded-full bg-cyan-500"
+              animate={{ 
+                scale: [0.8, 1, 0.8],
+                opacity: [0.6, 1, 0.6]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          </motion.div>
+        </motion.div>
+      )}
       <div
         ref={mountRef}
         className="w-full h-full absolute inset-0 flex items-center justify-center"
-        style={{ cursor: 'grab' }}
+        style={{ cursor: isLoading ? 'default' : 'grab' }}
       />
     </div>
   )
