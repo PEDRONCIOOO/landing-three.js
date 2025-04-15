@@ -1,30 +1,44 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { FaBolt, FaGlobe, FaMoneyBillWave, FaBriefcase } from 'react-icons/fa'
 import { useRef } from 'react'
+import Lottie, { LottieRefCurrentProps } from 'lottie-react'
+
+// Import your Lottie JSON files
+import cloudAnimation from '@/public/cloud.json' 
+import globalAnimation from '@/public/global.json'
+import incomeAnimation from '@/public/income.json'
+import staffAnimation from '@/public/staff.json'
 
 export default function WhyChooseGloboo() {
   const sectionRef = useRef(null)
   
+  // Array of refs for each animation
+  const lottieRefs = [
+    useRef<LottieRefCurrentProps>(null),
+    useRef<LottieRefCurrentProps>(null),
+    useRef<LottieRefCurrentProps>(null),
+    useRef<LottieRefCurrentProps>(null),
+  ]
+  
   const features = [
     {
-      icon: <FaBolt className="text-4xl" />,
+      lottie: cloudAnimation,
       title: 'Transferências Rápidas e Seguras',
       description: 'Transferências de pagamento instantâneas e criptografadas globalmente com segurança de nível bancário.',
     },
     {
-      icon: <FaGlobe className="text-4xl" />,
+      lottie: globalAnimation,
       title: 'Suporte a Múltiplas Moedas',
       description: 'Envie e receba em várias moedas com taxas de câmbio competitivas.',
     },
     {
-      icon: <FaMoneyBillWave className="text-4xl" />,
+      lottie: incomeAnimation,
       title: 'Taxas Baixas, Valores Transparentes',
       description: 'Preços transparentes sem custos ocultos. Veja exatamente o que você paga.',
     },
     {
-      icon: <FaBriefcase className="text-4xl" />,
+      lottie: staffAnimation,
       title: 'Para Freelancers e Empresas',
       description: 'Soluções personalizadas para profissionais modernos e empresas em crescimento.',
     },
@@ -33,7 +47,7 @@ export default function WhyChooseGloboo() {
   return (
     <section 
       ref={sectionRef}
-      className="relative overflow-hidden bg-gradient-to-b from-white/50 to-white py-24"
+      className="relative overflow-hidden bg-gradient-to-b from-white/50 to-white/10 py-24"
     >
       {/* Top wave decoration */}
       <div className="absolute top-0 w-full">
@@ -85,15 +99,29 @@ export default function WhyChooseGloboo() {
               className="bg-white rounded-2xl shadow-lg shadow-cyan-100/50 p-6 flex flex-col items-center text-center border border-gray-100 hover:border-cyan-200 transition-all"
             >
               <motion.div 
-                className="mb-5 p-4 rounded-full bg-gradient-to-br from-cyan-50 to-cyan-100 text-cyan-600"
+                className="mb-5 p-2 rounded-full bg-gradient-to-br from-cyan-50 to-cyan-100 text-cyan-600 w-20 h-20 flex items-center justify-center"
                 whileHover={{ 
                   scale: 1.1, 
                   rotate: 5, 
                   background: "linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)" 
                 }}
                 transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                onMouseEnter={() => {
+                  // Use the ref to access Lottie's methods
+                  if (lottieRefs[index].current) {
+                    lottieRefs[index].current?.goToAndPlay(0);
+                  }
+                }}
               >
-                {feature.icon}
+                {/* Fixed Lottie animation with ref */}
+                <Lottie 
+                  lottieRef={lottieRefs[index]}
+                  animationData={feature.lottie} 
+                  loop={true}
+                  autoplay={true}
+                  style={{ width: 60, height: 60 }}
+                  className="pointer-events-auto"
+                />
               </motion.div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {feature.title}
@@ -126,7 +154,7 @@ export default function WhyChooseGloboo() {
             duration: 8,
             repeat: Infinity,
             repeatType: "reverse",
-            delay: 0.8 // Only start infinite animation after initial reveal
+            delay: 0.8
           }}
         />
         <motion.div 
@@ -149,7 +177,7 @@ export default function WhyChooseGloboo() {
             duration: 10,
             repeat: Infinity,
             repeatType: "reverse",
-            delay: 1.2 // Only start infinite animation after initial reveal
+            delay: 1.2
           }}
         />
       </div>
