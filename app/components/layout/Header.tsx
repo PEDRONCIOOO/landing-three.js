@@ -1,45 +1,60 @@
 'use client'
 
-import Image from "next/image";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState, useRef, useCallback } from 'react'
+import { motion, AnimatePresence } from "framer-motion"
+import { usePathname } from "next/navigation"
+import Link from "next/link"
+import Image from "next/image"
 
 export default function Header() {
-  const pathname = usePathname();
-  const [visible, setVisible] = useState(true);
-  const prevScrollPosRef = useRef(0);
-  // Use dedicated state for active links to avoid hydration issues
-  const [activeLink, setActiveLink] = useState("");
-
+  const pathname = usePathname()
+  const [visible, setVisible] = useState(true)
+  const prevScrollPosRef = useRef(0)
+  const [activeLink, setActiveLink] = useState("")
+  const visibilityTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Update active link after mount to avoid hydration issues
   useEffect(() => {
-    // Update active link after component mounts to avoid hydration mismatch
-    setActiveLink(pathname);
-  }, [pathname]);
+    setActiveLink(pathname)
+  }, [pathname])
+
+  const handleScroll = useCallback(() => {
+    const currentScrollPos = window.scrollY
+    const scrollingUp = prevScrollPosRef.current > currentScrollPos
+    const beyondThreshold = currentScrollPos > 100 // Threshold for header visibility
+    
+    // Clear any existing timeout to prevent race conditions
+    if (visibilityTimeoutRef.current) {
+      clearTimeout(visibilityTimeoutRef.current)
+    }
+
+    // Set a delay before actually changing visibility state
+    visibilityTimeoutRef.current = setTimeout(() => {
+      // Only hide the header if we're scrolling down AND beyond the threshold
+      if (!scrollingUp && beyondThreshold) {
+        setVisible(false)
+      } 
+      // Add a bit more delay before showing to prevent flickering
+      else if (scrollingUp) {
+        setTimeout(() => setVisible(true), 150)
+      }
+    }, 200) // 200ms delay before processing scroll direction
+    
+    prevScrollPosRef.current = currentScrollPos
+  }, [])
   
   useEffect(() => {
-    // Reset visibility when path changes to ensure entrance animation plays
-    setVisible(true);
+    // Reset visibility when path changes
+    setVisible(true)
     
-    const handleScroll = () => {
-      const currentScrollPos = window.scrollY;
-      const scrollingUp = prevScrollPosRef.current > currentScrollPos;
-      const beyondThreshold = currentScrollPos > window.innerHeight * 0.6; // 60vh threshold
-      
-      // Show header when scrolling up, hide when scrolling down past threshold
-      if (scrollingUp) {
-        setVisible(true);
-      } else if (beyondThreshold && !scrollingUp) {
-        setVisible(false);
+    window.addEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (visibilityTimeoutRef.current) {
+        clearTimeout(visibilityTimeoutRef.current)
       }
-      
-      prevScrollPosRef.current = currentScrollPos;
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [pathname]);
+    }
+  }, [handleScroll, pathname])
 
   // Header variants with staggered animation
   const headerVariants = {

@@ -1,8 +1,9 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useRef } from 'react'
-import Lottie, { LottieRefCurrentProps } from 'lottie-react'
+import { useRef, useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
+import type { LottieRefCurrentProps } from 'lottie-react';
 
 // Import your Lottie JSON files
 import cloudAnimation from '@/public/cloud.json' 
@@ -10,8 +11,12 @@ import globalAnimation from '@/public/global.json'
 import incomeAnimation from '@/public/income.json'
 import staffAnimation from '@/public/staff.json'
 
+// Dynamically import Lottie with SSR disabled
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
+
 export default function WhyChooseGloboo() {
-  const sectionRef = useRef(null)
+  const sectionRef = useRef(null); // Add ref for the section if needed for animations
+  const [isMounted, setIsMounted] = useState(false)
   
   // Array of refs for each animation
   const lottieRefs = [
@@ -20,6 +25,11 @@ export default function WhyChooseGloboo() {
     useRef<LottieRefCurrentProps>(null),
     useRef<LottieRefCurrentProps>(null),
   ]
+  
+  // Set isMounted to true after component mounts
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
   
   const features = [
     {
@@ -39,8 +49,8 @@ export default function WhyChooseGloboo() {
     },
     {
       lottie: staffAnimation,
-      title: 'Para Freelancers e Empresas',
-      description: 'Soluções personalizadas para profissionais modernos e empresas em crescimento.',
+      title: 'Para Investidores e Cryptohunters',
+      description: 'Compre cryptomoedas com o seu cartão Globoo ou via PIX, Boleto, Débito, é você que manda!',
     },
   ]
 
@@ -65,19 +75,19 @@ export default function WhyChooseGloboo() {
           transition={{ duration: 0.7 }}
         >
           <motion.h2
-            className="text-4xl text-black font-bold leading-tight"
+            className="text-5xl lg:text-6xl text-black font-bold leading-tight"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, amount: 0.5 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
             Por que escolher a{' '}
-            <span className="bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-cyan-500 to-cyan-300 bg-clip-text text-transparent">
               Globoo
             </span>
           </motion.h2>
           <motion.p 
-            className="mt-4 text-gray-600 max-w-xl mx-auto"
+            className="mt-4 text-lg text-gray-600 max-w-xl mx-auto"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, amount: 0.5 }}
@@ -107,21 +117,22 @@ export default function WhyChooseGloboo() {
                 }}
                 transition={{ type: "spring", stiffness: 300, damping: 15 }}
                 onMouseEnter={() => {
-                  // Use the ref to access Lottie's methods
-                  if (lottieRefs[index].current) {
+                  if (isMounted && lottieRefs[index].current) {
                     lottieRefs[index].current?.goToAndPlay(0);
                   }
                 }}
               >
-                {/* Fixed Lottie animation with ref */}
-                <Lottie 
-                  lottieRef={lottieRefs[index]}
-                  animationData={feature.lottie} 
-                  loop={true}
-                  autoplay={true}
-                  style={{ width: 60, height: 60 }}
-                  className="pointer-events-auto"
-                />
+                {/* Only render Lottie when client-side */}
+                {isMounted && (
+                  <Lottie 
+                    lottieRef={lottieRefs[index]}
+                    animationData={feature.lottie} 
+                    loop={true}
+                    autoplay={true}
+                    style={{ width: 60, height: 60 }}
+                    className="pointer-events-auto"
+                  />
+                )}
               </motion.div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {feature.title}

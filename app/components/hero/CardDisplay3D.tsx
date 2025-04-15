@@ -18,31 +18,29 @@ const CARDS = [
 ];
 
 export default function CardDisplay3D() {
+  // All your existing state and refs remain the same
   const mountRef = useRef<HTMLDivElement>(null);
-  const [selectedCard, setSelectedCard] = useState("blue"); // Default to blue card
-  
-  // Track animation state in a ref to manage across card changes
+  const [selectedCard, setSelectedCard] = useState("blue");
   const animationRef = useRef<{
     scene?: THREE.Scene,
     cardModel?: THREE.Group,
     autoRotate?: gsap.core.Timeline
   }>({});
 
-  // Setup scene once
+  // Keep all your existing useEffects for the 3D functionality
   useEffect(() => {
     if (!mountRef.current) return;
-
     const mountElement = mountRef.current;
+    const currentAnimationRef = animationRef.current;
+    // ... rest of your existing 3D setup code
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color("#ffffff");
-    animationRef.current.scene = scene;
-
-    const width = mountElement.clientWidth;
-    const height = mountElement.clientHeight;
+    currentAnimationRef.scene = scene;
 
     // Camera setup
+    const width = mountElement.clientWidth;
+    const height = mountElement.clientHeight;
     const camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 100);
     camera.position.set(3, 0, 7);
 
@@ -149,7 +147,7 @@ export default function CardDisplay3D() {
         const newRotate = gsap.timeline({ repeat: -1 });
         newRotate.to(animationRef.current.cardModel.rotation, {
           y: animationRef.current.cardModel.rotation.y + Math.PI * 2,
-          duration: 15,
+          duration: 20,
           ease: "none"
         });
 
@@ -180,14 +178,13 @@ export default function CardDisplay3D() {
         mountElement.removeChild(renderer.domElement);
       }
 
-      // Clear any animations
-      if (animationRef.current.autoRotate) {
-        animationRef.current.autoRotate.kill();
+      // Clear any animations - using the captured ref value
+      if (currentAnimationRef.autoRotate) {
+        currentAnimationRef.autoRotate.kill();
       }
     };
   }, []);
 
-  // Load and display the selected card model
   useEffect(() => {
     if (!animationRef.current.scene) return;
 
@@ -333,69 +330,197 @@ export default function CardDisplay3D() {
   }, [selectedCard]);
 
   return (
-    <div className="w-full py-16 px-8 lg:px-16">
-      <div className="flex flex-col lg:flex-row items-center max-w-7xl mx-auto">
-        {/* Hero text on the left */}
-        <div className="w-full lg:w-1/2 lg:pr-12 mb-12 lg:mb-0">
-          <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mb-6">
-            Sua chave para o mundo financeiro
-          </h1>
-          <p className="text-base text-gray-500 mx-auto mt-3 mb-3">
-            Com os nossos cartões <span className="text-black/30">Black</span>, <span className="text-cyan-500">Blue</span>, <span className="text-yellow-500">Gold</span> tenha acesso a transferências globais, compras de crypto moedas,
-            compras internacionais e gestão financeira completa em um único
-            lugar. Simples, poderoso e sempre ao seu lado.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link href="/signup">
-              <motion.button
-                className="px-6 py-1 rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 text-white font-medium text-sm shadow-md shadow-cyan-200/30 hover:shadow-cyan-300/40 transition-all cursor-pointer"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Abra sua conta <IoMdArrowDropright className="inline-flex" />
-              </motion.button>
-            </Link>
-            <Link href="/learn-more">
-              <motion.button 
-                className="px-6 py-1 rounded-lg bg-white border border-gray-200 shadow-md shadow-cyan-200/30 text-gray-700 font-medium text-sm hover:border-cyan-200 transition-colors cursor-pointer"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Suporte <MdOutlineSupportAgent className="inline-flex" />
-              </motion.button>
-            </Link>
-          </div>
-        </div>
+    <div className="relative min-h-screen bg-gradient-to-b from-white to-gray-50 overflow-hidden">
+      {/* Background decoration elements */}
+      <div className="absolute inset-0 -z-10">
+        <motion.div 
+          className="absolute top-20 right-[20%] w-96 h-96 rounded-full bg-cyan-50 opacity-20 blur-3xl"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.15, 0.1, 0.15]
+          }}
+          transition={{ 
+            duration: 8,
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+        />
+        <motion.div 
+          className="absolute bottom-40 left-[15%] w-[30rem] h-[30rem] rounded-full bg-cyan-50 opacity-20 blur-3xl"
+          animate={{ 
+            scale: [1, 1.3, 1],
+            opacity: [0.12, 0.08, 0.12]
+          }}
+          transition={{ 
+            duration: 10,
+            repeat: Infinity,
+            repeatType: "reverse",
+            delay: 2
+          }}
+        />
+        
+        {/* Light grid pattern */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]"></div>
+      </div>
 
-        {/* 3D Card on the right */}
-        <div className="w-full lg:w-1/2 h-[400px] lg:h-[500px] relative">
-          {/* Card type selector circles */}
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 flex gap-4 z-10">
-            {CARDS.map((card) => (
-              <button
-                key={card.id}
-                className={`w-10 h-10 rounded-full ${card.color} shadow-lg transition-all 
-                  ${selectedCard === card.id 
-                    ? 'ring-4 ring-gray-200 scale-110' 
-                    : 'hover:scale-105'}`}
-                onClick={() => setSelectedCard(card.id)}
-                title={card.name}
-                aria-label={`Select ${card.name}`}
-              />
-            ))}
-          </div>
-          
-          {/* 3D card display area */}
-          <div
-            ref={mountRef}
-            className="w-full h-full rounded-xl overflow-hidden cursor-grab"
-          />
-          
-          {/* Card type label */}
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 bg-white px-4 py-1 rounded-full shadow-md text-black">
-            {CARDS.find(card => card.id === selectedCard)?.name || "Card"}
-          </div>
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-8 flex flex-col h-screen">
+        {/* Hero content container */}
+        <div className="flex flex-col lg:flex-row items-center justify-center h-full py-10 lg:py-0">
+          {/* Hero text section - left side */}
+          <motion.div 
+            className="w-full lg:w-1/2 lg:pr-16 mb-12 lg:mb-0"
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <div className="max-w-xl">
+              <motion.span 
+                className="text-sm font-semibold text-cyan-600 block mb-2"
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.5 }}
+              >
+                GLOBOO FINANCE
+              </motion.span>
+              
+              <motion.h1 
+                className="text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                Sua chave para o
+                <span className="bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent block">
+                  mundo financeiro
+                </span>
+              </motion.h1>
+
+              <motion.p 
+                className="text-lg text-gray-600 mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                Com os nossos cartões <span className="font-semibold text-gray-800">Black</span>, <span className="font-semibold text-cyan-600">Blue</span>, <span className="font-semibold text-amber-500">Gold</span>,
+                tenha acesso a transferências globais, compras de criptomoedas,
+                compras internacionais e gestão financeira completa.
+              </motion.p>
+
+              <motion.div 
+                className="flex flex-col sm:flex-row gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+              >
+                <Link href="/signup">
+                  <motion.button
+                    className="px-8 py-1 rounded-lg bg-gradient-to-r from-gray-800 to-gray-900 text-white font-medium shadow-lg shadow-cyan-200/30 hover:shadow-cyan-300/40 transition-all"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Abra sua conta <IoMdArrowDropright className="inline-flex ml-1" />
+                  </motion.button>
+                </Link>
+                <Link href="/support">
+                  <motion.button 
+                    className="px-8 py-1 rounded-lg bg-white border border-gray-200 shadow-md shadow-cyan-200/30 text-gray-700 font-medium hover:border-cyan-200 transition-colors"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Suporte <MdOutlineSupportAgent className="inline-flex ml-1" />
+                  </motion.button>
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* 3D Card display - right side */}
+          <motion.div 
+            className="w-full lg:w-1/2 h-[400px] lg:h-[600px] relative"
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            {/* Card type selector */}
+            <motion.div 
+              className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-6 z-10"
+              initial={{ opacity: 0, y: -20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              {CARDS.map((card) => (
+                <motion.button
+                  key={card.id}
+                  className={`w-14 h-14 rounded-full ${card.color} shadow-lg transition-all 
+                    ${selectedCard === card.id 
+                      ? 'ring-4 ring-gray-200 scale-110' 
+                      : 'opacity-80 hover:opacity-100'}`}
+                  onClick={() => setSelectedCard(card.id)}
+                  title={card.name}
+                  aria-label={`Select ${card.name}`}
+                  whileHover={{ scale: selectedCard === card.id ? 1.1 : 1.15 }}
+                  whileTap={{ scale: 0.95 }}
+                />
+              ))}
+            </motion.div>
+            
+            {/* Floating elements around card */}
+            <motion.div 
+              className="absolute -right-4 top-1/4 w-16 h-16 rounded-xl bg-white shadow-lg p-3 flex items-center justify-center"
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 0.9, x: 0 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
+            >
+              <svg viewBox="0 0 24 24" className="w-8 h-8 text-cyan-500">
+                <path fill="currentColor" d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z" />
+              </svg>
+            </motion.div>
+            
+            <motion.div 
+              className="absolute left-4 bottom-1/4 w-16 h-16 rounded-xl bg-white shadow-lg p-3 flex items-center justify-center"
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 0.9, x: 0 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.6, delay: 0.9 }}
+            >
+              <svg viewBox="0 0 24 24" className="w-8 h-8 text-amber-500">
+                <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z" />
+              </svg>
+            </motion.div>
+            
+            {/* 3D card display area */}
+            <div
+              ref={mountRef}
+              className="w-full h-full rounded-xl overflow-hidden cursor-grab"
+            />
+            
+            {/* Card type label */}
+            <motion.div 
+              className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white px-8 py-2 rounded-full shadow-lg text-gray-800 font-medium"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              {CARDS.find(card => card.id === selectedCard)?.name || "Card"}
+            </motion.div>
+          </motion.div>
         </div>
+      </div>
+      
+      {/* Bottom wave decoration */}
+      <div className="absolute bottom-0 left-0 w-full">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-24 text-white">
+          <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="currentColor"></path>
+        </svg>
       </div>
     </div>
   );

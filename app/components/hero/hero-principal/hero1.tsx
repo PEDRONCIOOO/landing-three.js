@@ -96,12 +96,12 @@ export default function Hero1() {
             </motion.div>
 
             <motion.p 
-              className="text-base text-gray-500 max-w-md mx-auto mt-3"
+              className="text-lg text-gray-600 max-w-md mx-auto mt-3"
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.5 }}
             >
-              <span className="text-cyan-500">Carteira criptográfica</span> e <span className="text-cyan-500">banco digital</span>. Envie dinheiro para amigos e família na Globoo de graça — sempre.
+              <span className="text-cyan-500 font-bold">Carteira criptográfica</span> e <span className="text-cyan-500 font-bold">banco digital</span>. Envie dinheiro para amigos e família na Globoo de graça — sempre.
             </motion.p>
 
             <motion.div 
