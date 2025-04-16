@@ -6,10 +6,14 @@ import dynamic from 'next/dynamic'
 import type { LottieRefCurrentProps } from 'lottie-react';
 
 // Import your Lottie JSON files
-import cloudAnimation from '@/public/cloud.json' 
+import cloudAnimation from '@/public/cloud2.json' 
 import globalAnimation from '@/public/global.json'
-import incomeAnimation from '@/public/income.json'
-import staffAnimation from '@/public/staff.json'
+import incomeAnimation from '@/public/money.json'
+import staffAnimation from '@/public/Iq.json'
+import supportAnimation from '@/public/support.json'
+import securityAnimation from '@/public/security.json'
+import highEarnAnimation from '@/public/downmoney.json'
+import timeAnimation from '@/public/time.json'
 
 // Dynamically import Lottie with SSR disabled
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
@@ -20,6 +24,10 @@ export default function WhyChooseGloboo() {
   
   // Array of refs for each animation
   const lottieRefs = [
+    useRef<LottieRefCurrentProps>(null),
+    useRef<LottieRefCurrentProps>(null),
+    useRef<LottieRefCurrentProps>(null),
+    useRef<LottieRefCurrentProps>(null),
     useRef<LottieRefCurrentProps>(null),
     useRef<LottieRefCurrentProps>(null),
     useRef<LottieRefCurrentProps>(null),
@@ -52,6 +60,26 @@ export default function WhyChooseGloboo() {
       title: 'Para Investidores e Cryptohunters',
       description: 'Compre cryptomoedas com o seu cartão Globoo ou via PIX, Boleto, Débito, é você que manda!',
     },
+    {
+      lottie: supportAnimation,
+      title: 'Suporte Personalizado e Humanizado',
+      description: 'A única exchange com atendimento especializado e rápido via chat em tempo real.',
+    },
+    {
+      lottie: securityAnimation,
+      title: 'Segurança de Nível Bancário',
+      description: 'Proteção de dados e transações com criptografia de ponta a ponta, aumentando a confiabilidade do seu dinheiro.',
+    },
+    {
+      lottie: highEarnAnimation,
+      title: 'Alta Liquidez e Independência',
+      description: 'Acesse o mercado de criptomoedas com alta liquidez e sem intermediários, garantindo maior controle sobre seus investimentos.',
+    },
+    {
+      lottie: timeAnimation,
+      title: 'Sem tempo de espera ou burocracia',
+      description: 'Depósitos e saques instantâneos sem aprovação prévia. Acesse seu dinheiro quando precisar.',
+    }
   ]
 
   return (
@@ -115,7 +143,7 @@ export default function WhyChooseGloboo() {
                   rotate: 5, 
                   background: "linear-gradient(135deg, #e0f7fa 0%, #80deea 100%)" 
                 }}
-                transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                transition={{ type: "spring", stiffness: 300, damping: 5 }}
                 onMouseEnter={() => {
                   if (isMounted && lottieRefs[index].current) {
                     lottieRefs[index].current?.goToAndPlay(0);
