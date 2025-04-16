@@ -1,6 +1,7 @@
 import Hero1 from "@/app/components/hero/hero-principal/hero1";
 import Hero2 from "@/app/components/hero/hero-secondary/hero2";
 import Hero3 from "./components/hero/hero-terciary/hero3";
+import Hero4 from "./components/hero/hero-fourth/hero4";
 
 export default function Home() {
   return (
@@ -8,6 +9,7 @@ export default function Home() {
       <Hero1 />
       <Hero2 />
       <Hero3 />
+      <Hero4 />
     </div>
   );
 }

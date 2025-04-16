@@ -5,6 +5,14 @@ import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
+import dynamic from "next/dynamic"
+import type { LottieRefCurrentProps } from 'lottie-react'
+
+// Dynamically import Lottie with SSR disabled
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false })
+
+// Import your Lottie animation file
+import logoAnimation from '@/public/logofinal.json'
 
 export default function Header() {
   const pathname = usePathname()
@@ -12,6 +20,9 @@ export default function Header() {
   const prevScrollPosRef = useRef(0)
   const [activeLink, setActiveLink] = useState("")
   const visibilityTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Reference for the Lottie animation
+  const logoAnimationRef = useRef<LottieRefCurrentProps>(null)
   
   // Update active link after mount to avoid hydration issues
   useEffect(() => {
@@ -130,22 +141,45 @@ export default function Header() {
           className="w-full fixed z-50"
         >
           <motion.nav 
-            className="flex mx-auto items-center justify-evenly p-2 bg-white/50 backdrop-blur-sm text-white w-full border-bottom border-gray-200 shadow-sm"
+            className="flex mx-auto items-center justify-evenly p-2 bg-black backdrop-blur-sm text-white w-full border-bottom border-gray-200 shadow-sm"
           >
             <motion.div variants={itemVariants}>
-              <Link href="/" className="flex items-center gap-2">
+              <Link 
+                href="/" 
+                className="flex items-center gap-0"
+                onMouseEnter={() => {
+                  // On hover, play animation from start
+                  if (logoAnimationRef.current) {
+                    logoAnimationRef.current.play();
+                  }
+                }}
+              >
+                {/* Lottie animated "G" logo */}
+                <div className="w-12 h-12 relative flex items-center justify-center">
+                  <Lottie
+                    lottieRef={logoAnimationRef}
+                    animationData={logoAnimation}
+                    loop={true}
+                    autoplay={true}
+                    style={{ width: 60, height: 60 }}
+                    className="absolute"
+                  />
+                </div>
+                
+                {/* Static "globoo" text logo */}
                 <Image
-                  src="/globoo.svg"
+                  src="/globoo-only.svg"
                   alt="Globoo.io logo"
                   draggable="false"
-                  width={140}
-                  height={140}
+                  width={80} // Adjusted to fit with the animated logo
+                  height={40}
                   priority
+                  className="ml-2" // Small margin to adjust positioning
                 />
               </Link>
             </motion.div>
 
-            <ul className="flex items-center gap-4 text-gray-600 text-sm">
+            <ul className="flex items-center gap-4 text-white text-sm">
               {["Home", "Carteira", "Bank", "Exchange", "Escrow", "Contato"].map((item, index) => (
                 <motion.li key={index} variants={itemVariants}>
                   <Link 
@@ -160,12 +194,12 @@ export default function Header() {
 
             <div className="flex items-center gap-2 text-sm">
               <motion.div variants={itemVariants}>
-                <Link href="/login" className="bg-black text-white px-4 py-1 rounded-lg">
+                <Link href="/login" className="bg-cyan-400 text-black font-medium px-4 py-1 rounded-lg">
                   Entrar
                 </Link>
               </motion.div>
               <motion.div variants={itemVariants}>
-                <Link href="/register" className="bg-gray-200 text-black px-4 py-1 rounded-lg">
+                <Link href="/register" className="bg-gray-200 font-medium text-black px-4 py-1 rounded-lg">
                   Registrar
                 </Link>
               </motion.div>
