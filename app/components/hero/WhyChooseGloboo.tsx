@@ -103,7 +103,7 @@ export default function WhyChooseGloboo() {
           transition={{ duration: 0.7 }}
         >
           <motion.h2
-            className="text-5xl lg:text-6xl text-black font-bold leading-tight"
+            className="text-4xl lg:text-5xl text-black font-bold leading-tight"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, amount: 0.5 }}

@@ -386,7 +386,7 @@ export default function CardDisplay3D() {
               </motion.span>
               
               <motion.h1 
-                className="text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 mb-8"
+                className="text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mb-8"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.5 }}
