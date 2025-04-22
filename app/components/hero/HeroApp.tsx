@@ -265,7 +265,7 @@ export default function HeroApp() {
           {/* Content Section - Right */}
           <div className="w-full lg:w-1/2 text-center lg:text-left">
             <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mb-4">
-              Sua vida financeira
+              O App Globoo.io
               <span className="block h-16 mt-1">
                 <motion.span
                   initial="hidden"
