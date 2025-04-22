@@ -1,143 +1,171 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Image from "next/image";
+import Lottie from "lottie-react";
+import globooAnimation from "../../../public/globoo-animated.json";
 
-const coins = [
-  { name: "Solana", image: "/solana.png", x: -300, y: -150, color: "from-purple-500 to-fuchsia-500", glowColor: "rgba(168, 85, 247, 0.5)" },
-  { name: "Avalanche", image: "/avax.png", x: -300, y: 0, color: "from-red-500 to-orange-500", glowColor: "rgba(239, 68, 68, 0.5)" },
-  { name: "BNB", image: "/bnb.png", x: -300, y: 150, color: "from-yellow-400 to-amber-500", glowColor: "rgba(251, 191, 36, 0.5)" },
-  { name: "Polygon", image: "/polygon.png", x: 300, y: -150, color: "from-purple-600 to-indigo-500", glowColor: "rgba(99, 102, 241, 0.5)" },
-  { name: "Ethereum", image: "/ethereum.png", x: 300, y: 0, color: "from-blue-500 to-cyan-400", glowColor: "rgba(6, 182, 212, 0.5)" },
-  { name: "Bitcoin", image: "/bitcoin.png", x: 300, y: 150, color: "from-amber-500 to-yellow-300", glowColor: "rgba(245, 158, 11, 0.5)" },
+const options = [
+  { name: "Solana", image: "/solana.png", x: -300, y: -150, color: "#9945FF" },
+  { name: "Avalanche", image: "/avax.png", x: -300, y: 0, color: "#E84142" },
+  { name: "BNB", image: "/bnb.png", x: -300, y: 150, color: "#F0B90B" },
+  { name: "Polygon", image: "/polygon.png", x: 300, y: -150, color: "#8247E5" },
+  { name: "Ethereum", image: "/ethereum.png", x: 300, y: 0, color: "#627EEA" },
+  { name: "Bitcoin", image: "/bitcoin.png", x: 300, y: 150, color: "#F7931A" },
 ];
 
-export default function CryptoMindMap() {
-  const [walletPulse, setWalletPulse] = useState(false);
-  const [activeLine, setActiveLine] = useState(-1);
-  const [transactionCount, setTransactionCount] = useState(0);
-  const countRef = useRef(0);
-
+export default function AnimatedHero() {
+  const [active, setActive] = useState(0);
+  const lottieRef = useRef(null);
+  
   useEffect(() => {
-    const lineInterval = setInterval(() => {
-      const nextLine = (activeLine + 1) % coins.length;
-      setActiveLine(nextLine);
-      setWalletPulse(true);
-      setTimeout(() => setWalletPulse(false), 300);
-      countRef.current += Math.floor(Math.random() * 50) + 10;
-      setTransactionCount(countRef.current);
-    }, 2000);
-    return () => clearInterval(lineInterval);
-  }, [activeLine]);
+    const interval = setInterval(() => {
+      setActive((prev) => (prev + 1) % options.length);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="relative w-full h-screen flex items-center justify-center bg-black overflow-hidden">
-      <div className="absolute inset-0 bg-black">
-        <motion.div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-to-tr from-blue-900/20 to-purple-800/20 blur-3xl"
-          animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.3, 0.2] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
+    <div className="relative w-full h-screen bg-black overflow-hidden flex flex-col items-center justify-start pt-20">
+      {/* Hero Text Section */}
+      <div className="relative z-20 text-center max-w-4xl px-6">
+        <motion.h1 
+          className="text-3xl md:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-cyan-100 mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          Negocie com confiança na exchange de cripto mais rápida e segura no mundo todo.
+        </motion.h1>
+        
+        <motion.p 
+          className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          Compre e venda mais de 200 criptomoedas usando mais de 20 moedas fiat por transferência bancária, cartão de crédito ou débito.
+        </motion.p>
       </div>
-
-      <AnimatePresence>
-        {walletPulse && (
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 2, opacity: 0.2 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-            className="absolute z-10 w-72 h-72 rounded-full bg-gradient-radial from-white/30 to-transparent"
-          />
-        )}
-      </AnimatePresence>
-
-      <motion.div
-        className={`z-10 w-80 h-[500px] flex items-center justify-center ${walletPulse ? 'scale-[1.03]' : ''}`}
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, type: "spring", stiffness: 300 }}
-      >
-        <motion.div 
-          className="absolute w-80 h-[500px] rounded-3xl"
-          animate={{
-            boxShadow: walletPulse 
-              ? `0 0 50px 15px ${coins[activeLine]?.glowColor || "rgba(6, 182, 212, 0.3)"}`
-              : "0 0 25px 8px rgba(6, 182, 212, 0.1)"
-          }}
-          transition={{ duration: 0.3 }}
+      
+      {/* Animation Container */}
+      <div className="relative flex-1 w-full flex items-center justify-center">
+        {/* Animated rotating border */}
+        <motion.div
+          className="absolute w-96 h-96 rounded-full border-4 border-cyan-400/50"
+          animate={{ rotate: 360 }}
+          transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
         />
-        <div className="relative">
-          <Image 
-            src="/phonecrypto.webp" 
-            alt="Crypto Wallet App" 
-            width={340} 
-            height={480} 
-            className="rounded-xl drop-shadow-2xl" 
-            draggable="false" 
-          />
-          <motion.div 
-            className="absolute top-1/3 left-1/2 -translate-x-1/2 text-2xl font-bold text-white"
-            key={transactionCount}
-            initial={{ scale: 0.8, opacity: 0.5 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 500 }}
-          >
-            {transactionCount} USD
-          </motion.div>
-        </div>
-      </motion.div>
+        
+        {/* Inner rotating border with opposite direction */}
+        <motion.div
+          className="absolute w-80 h-80 rounded-full border-2 border-dashed border-cyan-500/30"
+          animate={{ rotate: -360 }}
+          transition={{ repeat: Infinity, duration: 12, ease: "linear" }}
+        />
 
-      {coins.map((coin, index) => (
-        <div key={index} className="absolute" style={{ left: `calc(50% + ${coin.x}px)`, top: `calc(50% + ${coin.y}px)` }}>
-          <div className="absolute" style={{ width: `${Math.abs(coin.x)}px`, height: "2px", top: "50%", left: coin.x > 0 ? `-${Math.abs(coin.x)}px` : "100%", transform: "translateY(-50%)", background: "rgba(31, 41, 55, 0.4)", overflow: "hidden" }}>
-            <motion.div
-              className="absolute inset-0"
-              initial={{ opacity: 0 }}
-              animate={{ 
-                opacity: activeLine === index ? [0, 1, 0.7] : 0,
-                boxShadow: activeLine === index 
-                  ? [`0 0 3px 1px ${coin.glowColor}`, `0 0 12px 3px ${coin.glowColor}`, `0 0 8px 2px ${coin.glowColor}`] 
-                  : "none"
-              }}
-              style={{ 
-                background: `linear-gradient(to ${coin.x > 0 ? 'left' : 'right'}, ${coin.glowColor}, transparent)`,
-                borderRadius: "4px"
-              }}
-              transition={{ duration: 1.8 }}
-            />
-          </div>
-          <motion.div
-            className="relative flex items-center justify-center w-16 h-16 rounded-full bg-gray-900 shadow-lg border border-gray-800"
-            initial={{ opacity: 0, scale: 0.5 }}
+        {/* Center element with Lottie animation - BIGGER NOW */}
+        <div className="relative z-10 w-64 h-64 rounded-full bg-gray-900 flex items-center justify-center shadow-lg">
+          <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-500/10 to-transparent"></div>
+          <motion.div 
+            className="absolute inset-0 rounded-full"
             animate={{ 
-              opacity: 1, 
-              scale: activeLine === index ? [1, 1.15, 1.1] : 1,
-              boxShadow: activeLine === index 
-                ? [`0 0 10px 2px ${coin.glowColor}`, `0 0 25px 7px ${coin.glowColor}`, `0 0 20px 5px ${coin.glowColor}`] 
-                : "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+              boxShadow: [
+                "0 0 15px 3px rgba(6, 182, 212, 0.3)",
+                "0 0 30px 8px rgba(6, 182, 212, 0.5)",
+                "0 0 15px 3px rgba(6, 182, 212, 0.3)"
+              ]
             }}
-            transition={{ duration: activeLine === index ? 1.8 : 0.5, delay: index * 0.1 }}
-          >
-            <Image src={coin.image} alt={coin.name} width={40} height={40} />
-            <motion.div 
-              className={`absolute inset-0 rounded-full bg-gradient-to-r ${coin.color}`}
-              animate={{ 
-                opacity: activeLine === index ? [0.2, 0.5, 0.4] : 0.2,
-                filter: activeLine === index ? ["blur(2px)", "blur(6px)", "blur(4px)"] : "blur(2px)"
-              }}
-              transition={{ duration: 1.8 }}
-            />
-          </motion.div>
-          <motion.div
-            className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-400"
-            animate={{ opacity: activeLine === index ? 1 : 0.6 }}
-          >
-            {coin.name}
-          </motion.div>
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+          <Lottie 
+            lottieRef={lottieRef}
+            animationData={globooAnimation} 
+            loop={true}
+            autoplay={true}
+            style={{ width: 180, height: 180 }} // Increased size
+            className="rounded-full"
+          />
         </div>
-      ))}
+
+        {/* Connecting lines and options */}
+        {options.map((item, index) => (
+          <div
+            key={index}
+            className="absolute"
+            style={{ left: `calc(50% + ${item.x}px)`, top: `calc(50% + ${item.y}px)` }}
+          >
+            {/* Animated glowing line with sparkle effect */}
+            <motion.div
+              className="absolute"
+              style={{
+                width: `${Math.abs(item.x)}px`,
+                height: "2px",
+                top: "50%",
+                left: item.x > 0 ? `-${Math.abs(item.x)}px` : "100%",
+                transform: "translateY(-50%)",
+                background: `linear-gradient(to ${item.x > 0 ? 'left' : 'right'}, ${item.color}, transparent)`,
+                opacity: active === index ? 1 : 0.3,
+                overflow: "hidden"
+              }}
+              animate={{ opacity: [0.3, 1, 0.3] }}
+              transition={{ repeat: Infinity, duration: 1.5, delay: index * 0.1 }}
+            >
+              {/* Particle effect for active line */}
+              {active === index && (
+                <motion.div
+                  className="absolute top-1/2 -translate-y-1/2 w-10 h-4 rounded-full"
+                  style={{ 
+                    background: `radial-gradient(circle, ${item.color}, transparent)`,
+                    filter: "blur(3px)",
+                    left: item.x > 0 ? "0" : "auto",
+                    right: item.x <= 0 ? "0" : "auto"
+                  }}
+                  animate={{
+                    left: item.x > 0 ? "100%" : undefined,
+                    right: item.x <= 0 ? "100%" : undefined,
+                    opacity: [0, 1, 0]
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: 1,
+                    repeatDelay: 0.1
+                  }}
+                />
+              )}
+            </motion.div>
+
+            {/* Option icon with more dynamic effects */}
+            <motion.div
+              className="relative flex items-center justify-center w-14 h-14 rounded-full bg-gray-800 border"
+              style={{
+                borderColor: item.color
+              }}
+              animate={{ 
+                opacity: active === index ? 1 : 0.4,
+                scale: active === index ? [1, 1.1, 1] : 1,
+                boxShadow: active === index ? `0 0 15px 3px ${item.color}40` : "none"
+              }}
+              transition={{ 
+                duration: 1.5, 
+                repeat: active === index ? Infinity : 0,
+                repeatType: "mirror"
+              }}
+            >
+              <Image src={item.image} alt={item.name} width={32} height={32} />
+            </motion.div>
+            
+            {/* Currency label */}
+            <motion.div
+              className="absolute top-full mt-2 left-1/2 -translate-x-1/2 text-xs font-medium"
+              style={{ color: active === index ? item.color : "#6B7280" }}
+            >
+              {item.name}
+            </motion.div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
